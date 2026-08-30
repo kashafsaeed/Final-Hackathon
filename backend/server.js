@@ -1,28 +1,102 @@
-require("dotenv").config();
 
-const express = require("express");
-const cors = require("cors");
-const cookieParser = require("cookie-parser");
-const connectDB = require("./config/db");
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+
+import connectDB from "./config/db.js";
+import authRoutes from "./routes/authRoutes.js";
+import ticketRoutes from "./routes/ticketRoutes.js";
+
+
+// ===============================
+// ENV CONFIG
+// ===============================
+
+dotenv.config();
+
+
+// ===============================
+// APP
+// ===============================
 
 const app = express();
 
-// Connect MongoDB
+
+// ===============================
+// DATABASE
+// ===============================
+
 connectDB();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 
-// Test route
+// ===============================
+// MIDDLEWARE
+// ===============================
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
+
+app.use(express.json());
+
+
+// ===============================
+// TEST ROUTE
+// ===============================
+
 app.get("/", (req, res) => {
-  res.send("Backend is working!");
+  res.status(200).json({
+    success: true,
+    message: "ResolveHub API is running",
+  });
 });
 
-const PORT = process.env.PORT || 5000;
+
+// ===============================
+// AUTH ROUTES
+// ===============================
+
+app.use(
+  "/api/auth",
+  authRoutes
+);
+
+
+// ===============================
+// TICKET ROUTES
+// ===============================
+
+app.use(
+  "/api/tickets",
+  ticketRoutes
+);
+
+
+// ===============================
+// 404
+// ===============================
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+  });
+});
+
+
+// ===============================
+// SERVER
+// ===============================
+
+const PORT =
+  process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(
+    `🚀 Server running on http://localhost:${PORT}`
+  );
 });
+
