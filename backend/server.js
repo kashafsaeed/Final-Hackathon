@@ -36,7 +36,7 @@ connectDB();
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "https://frontend-six-theta-mfk5dixgph.vercel.ap",
     credentials: true,
   })
 );
