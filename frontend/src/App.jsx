@@ -1,3 +1,4 @@
+
 import {
   Navigate,
   Route,
@@ -8,7 +9,6 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
-import Settings from "./pages/Settings";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -59,18 +59,9 @@ const App = () => {
         }
       >
 
-        {/* Customer Dashboard */}
-
         <Route
           path="/dashboard"
           element={<Dashboard />}
-        />
-
-        {/* Customer Settings */}
-
-        <Route
-          path="/dashboard/settings"
-          element={<Settings />}
         />
 
       </Route>
@@ -88,18 +79,9 @@ const App = () => {
         }
       >
 
-        {/* Admin Dashboard */}
-
         <Route
           path="/admin"
           element={<AdminDashboard />}
-        />
-
-        {/* Admin Settings */}
-
-        <Route
-          path="/admin/settings"
-          element={<Settings />}
         />
 
       </Route>
@@ -125,3 +107,4 @@ const App = () => {
 
 
 export default App;
+

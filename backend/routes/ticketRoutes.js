@@ -1,3 +1,4 @@
+
 import express from "express";
 
 import {
@@ -21,9 +22,10 @@ const router = express.Router();
 
 
 // ======================================
-// CUSTOMER
+// CUSTOMER ROUTES
 // ======================================
 
+// Create ticket
 router.post(
   "/",
   protect,
@@ -31,6 +33,8 @@ router.post(
   createTicket
 );
 
+
+// Get customer's tickets
 router.get(
   "/my",
   protect,
@@ -38,6 +42,8 @@ router.get(
   getMyTickets
 );
 
+
+// Get single customer's ticket
 router.get(
   "/my/:id",
   protect,
@@ -45,6 +51,8 @@ router.get(
   getMyTicket
 );
 
+
+// Cancel customer's ticket
 router.patch(
   "/:id/cancel",
   protect,
@@ -54,16 +62,19 @@ router.patch(
 
 
 // ======================================
-// ADMIN
+// ADMIN ROUTES
 // ======================================
 
+// Get all tickets
 router.get(
-  "/",
+  "/all",
   protect,
   adminOnly,
   getAllTickets
 );
 
+
+// Get ticket statistics
 router.get(
   "/stats",
   protect,
@@ -71,6 +82,8 @@ router.get(
   getTicketStats
 );
 
+
+// Update ticket
 router.patch(
   "/:id",
   protect,
@@ -78,6 +91,8 @@ router.patch(
   updateTicket
 );
 
+
+// Delete ticket
 router.delete(
   "/:id",
   protect,

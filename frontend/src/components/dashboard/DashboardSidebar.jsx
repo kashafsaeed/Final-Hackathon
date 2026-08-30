@@ -1,7 +1,7 @@
 
 import {
   LayoutDashboard,
-  Settings,
+  
   LogOut,
   X,
 } from "lucide-react";
@@ -138,35 +138,7 @@ const Sidebar = ({
           </NavLink>
 
 
-          {/* Settings */}
-          <NavLink
-            to={
-              role === "admin"
-                ? "/admin/settings"
-                : "/dashboard/settings"
-            }
-            onClick={() => setOpen(false)}
-            className={({ isActive }) => `
-              flex
-              items-center
-              gap-3
-              px-3
-              py-3
-              mt-1
-              rounded-xl
-              text-sm
-              font-semibold
-              transition
-              ${
-                isActive
-                  ? "bg-[#173249] text-[#73B7D8]"
-                  : "text-slate-500 hover:bg-[#111E30] hover:text-white"
-              }
-            `}
-          >
-            <Settings size={18} />
-            Settings
-          </NavLink>
+       
 
         </nav>
 

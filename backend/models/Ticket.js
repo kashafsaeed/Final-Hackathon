@@ -1,18 +1,40 @@
+
 import mongoose from "mongoose";
+
+
+// ======================================
+// TICKET SCHEMA
+// ======================================
 
 const ticketSchema = new mongoose.Schema(
   {
+
+    // ================================
+    // Unique Ticket Number
+    // ================================
+
     ticketNumber: {
       type: String,
-      unique: true,
       required: true,
+      unique: true,
+      trim: true,
     },
+
+
+    // ================================
+    // Customer
+    // ================================
 
     customer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
+
+
+    // ================================
+    // Ticket Information
+    // ================================
 
     title: {
       type: String,
@@ -26,6 +48,11 @@ const ticketSchema = new mongoose.Schema(
       trim: true,
     },
 
+
+    // ================================
+    // Category
+    // ================================
+
     category: {
       type: String,
       enum: [
@@ -33,41 +60,78 @@ const ticketSchema = new mongoose.Schema(
         "Technical",
         "Account",
         "Order",
-        "Delivery",
-        "Other",
+        "General",
       ],
-      default: "Other",
+      default: "General",
     },
 
-    orderId: {
-      type: String,
-      default: "",
-      trim: true,
-    },
 
-    contactNumber: {
-      type: String,
-      default: "",
-      trim: true,
-    },
-
-    contactMethod: {
-      type: String,
-      enum: ["Email", "Phone", "Chat"],
-      default: "Email",
-    },
-
-    urgency: {
-      type: String,
-      enum: ["Low", "Medium", "High"],
-      default: "Medium",
-    },
+    // ================================
+    // Priority
+    // ================================
 
     priority: {
       type: String,
-      enum: ["Low", "Medium", "High"],
+      enum: [
+        "Low",
+        "Medium",
+        "High",
+      ],
       default: "Medium",
     },
+
+
+    // ================================
+    // Urgency
+    // ================================
+
+    urgency: {
+      type: String,
+      enum: [
+        "Low",
+        "Medium",
+        "High",
+      ],
+      default: "Medium",
+    },
+
+
+    // ================================
+    // Order Information
+    // ================================
+
+    orderId: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+
+    // ================================
+    // Contact Information
+    // ================================
+
+    contactNumber: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+
+    contactMethod: {
+      type: String,
+      enum: [
+        "Email",
+        "Phone",
+        "SMS",
+      ],
+      default: "Email",
+    },
+
+
+    // ================================
+    // Ticket Status
+    // ================================
 
     status: {
       type: String,
@@ -81,7 +145,24 @@ const ticketSchema = new mongoose.Schema(
       default: "New",
     },
 
+
+    // ================================
+    // Assigned Agent
+    // ================================
+
+    assignedAgent: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+
+    // ================================
+    // AI Suggestion
+    // ================================
+
     aiSuggestion: {
+
       category: {
         type: String,
         default: "",
@@ -89,30 +170,59 @@ const ticketSchema = new mongoose.Schema(
 
       priority: {
         type: String,
-        enum: ["Low", "Medium", "High"],
-        default: "Medium",
+        enum: [
+          "Low",
+          "Medium",
+          "High",
+          "",
+        ],
+        default: "",
       },
 
       summary: {
         type: String,
         default: "",
       },
+
     },
+
+
+    // ================================
+    // AI Human Review
+    // ================================
 
     aiReviewed: {
       type: Boolean,
       default: false,
     },
 
+
+    // ================================
+    // Resolution
+    // ================================
+
     resolutionNote: {
       type: String,
+      trim: true,
       default: "",
     },
+
   },
+
+
+  // ================================
+  // Timestamps
+  // ================================
+
   {
     timestamps: true,
   }
 );
+
+
+// ======================================
+// EXPORT
+// ======================================
 
 const Ticket = mongoose.model(
   "Ticket",
@@ -120,3 +230,4 @@ const Ticket = mongoose.model(
 );
 
 export default Ticket;
+
