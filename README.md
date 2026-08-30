@@ -550,31 +550,7 @@ Customer can see the latest ticket status from their dashboard.
 
 ---
 
-# 🌐 Environment Variables
 
-Never commit `.env` files to GitHub.
-
-Example:
-
-```env
-PORT=5000
-
-MONGO_URI=mongodb://127.0.0.1:27017/resolvehub
-
-JWT_SECRET=your_secret_key
-
-AI_API_KEY=your_private_ai_key
-```
-
-Add `.env` to `.gitignore`:
-
-```text
-.env
-node_modules
-dist
-```
-
----
 
 # 🛡️ Security
 
