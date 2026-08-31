@@ -369,6 +369,71 @@
 
 
 
+// import express from "express";
+// import cors from "cors";
+// import dotenv from "dotenv";
+
+// import connectDB from "./config/db.js";
+// import authRoutes from "./routes/authRoutes.js";
+// import ticketRoutes from "./routes/ticketRoutes.js";
+
+// dotenv.config();
+
+// const app = express();
+
+// const allowedOrigins = [
+//   "http://localhost:5173",
+//   "https://final-hackathon-gm86.vercel.app",
+// ];
+
+// app.use(
+//   cors({
+//     origin: allowedOrigins,
+//     credentials: true,
+//   })
+// );
+
+// app.use(express.json());
+
+// app.get("/", (req, res) => {
+//   res.json({
+//     success: true,
+//     message: "ResolveHub API is running",
+//   });
+// });
+
+// app.use("/api/auth", authRoutes);
+// app.use("/api/tickets", ticketRoutes);
+
+// app.use((req, res) => {
+//   res.status(404).json({
+//     success: false,
+//     message: `Route not found: ${req.method} ${req.originalUrl}`,
+//   });
+// });
+
+// app.use((err, req, res, next) => {
+//   console.error("Server Error:", err);
+
+//   res.status(500).json({
+//     success: false,
+//     message: err.message || "Internal server error",
+//   });
+// });
+
+// const PORT = process.env.PORT || 5000;
+
+// if (process.env.NODE_ENV !== "production") {
+//   app.listen(PORT, () => {
+//     console.log(`Server running on http://localhost:${PORT}`);
+//   });
+// }
+
+// export default app;
+
+
+
+
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -381,17 +446,32 @@ dotenv.config();
 
 const app = express();
 
+// ✅ ADD THE CORRECT FRONTEND URL HERE
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://final-hackathon-gm86.vercel.app",
+  "https://frontend-six-theta-mfk5dixgph.vercel.app", // 👈 Ye wala URL chahiye!
 ];
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps, curl, Postman)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS: " + origin));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// ✅ Handle preflight (OPTIONS) requests for all routes
+app.options("*", cors());
 
 app.use(express.json());
 
