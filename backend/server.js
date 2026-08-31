@@ -430,8 +430,6 @@
 // }
 
 // export default app;
-
-
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -442,33 +440,26 @@ import ticketRoutes from "./routes/ticketRoutes.js";
 
 dotenv.config();
 
-// ✅ STEP 1: DB CONNECT (Sabse pehle!)
-connectDB();
-
 const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",
   "https://frontend-six-theta-mfk5dixgph.vercel.app",
+  "https://final-hackathon-gm86.vercel.app",
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS: " + origin));
+        callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
-app.options("*", cors());
 
 app.use(express.json());
 
@@ -476,7 +467,6 @@ app.get("/", (req, res) => {
   res.json({
     success: true,
     message: "ResolveHub API is running",
-    dbStatus: mongoose.connection.readyState === 1 ? "Connected" : "Disconnected",
   });
 });
 
@@ -491,7 +481,8 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error("🔥 Server Error:", err);
+  console.error("Server Error:", err);
+
   res.status(500).json({
     success: false,
     message: err.message || "Internal server error",
