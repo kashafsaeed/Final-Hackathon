@@ -443,9 +443,14 @@ dotenv.config();
 const app = express();
 
 const allowedOrigins = [
+  // "http://localhost:5173",
+  // "https://frontend-six-theta-mfk5dixgph.vercel.app",
+  // "https://final-hackathon-gm86.vercel.app",
+  // "https://final-hackathon-fpv1.vercel.app",
   "http://localhost:5173",
   "https://frontend-six-theta-mfk5dixgph.vercel.app",
   "https://final-hackathon-gm86.vercel.app",
+  "https://final-hackathon-fpv1.vercel.app",
 ];
 
 app.use(
