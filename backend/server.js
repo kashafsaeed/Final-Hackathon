@@ -432,8 +432,6 @@
 // export default app;
 
 
-
-
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -444,20 +442,20 @@ import ticketRoutes from "./routes/ticketRoutes.js";
 
 dotenv.config();
 
+// ✅ STEP 1: DB CONNECT (Sabse pehle!)
+connectDB();
+
 const app = express();
 
-// ✅ ADD THE CORRECT FRONTEND URL HERE
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://frontend-six-theta-mfk5dixgph.vercel.app", // 👈 Ye wala URL chahiye!
+  "https://frontend-six-theta-mfk5dixgph.vercel.app",
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps, curl, Postman)
       if (!origin) return callback(null, true);
-      
       if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -470,7 +468,6 @@ app.use(
   })
 );
 
-// ✅ Handle preflight (OPTIONS) requests for all routes
 app.options("*", cors());
 
 app.use(express.json());
@@ -479,6 +476,7 @@ app.get("/", (req, res) => {
   res.json({
     success: true,
     message: "ResolveHub API is running",
+    dbStatus: mongoose.connection.readyState === 1 ? "Connected" : "Disconnected",
   });
 });
 
@@ -493,8 +491,7 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error("Server Error:", err);
-
+  console.error("🔥 Server Error:", err);
   res.status(500).json({
     success: false,
     message: err.message || "Internal server error",
