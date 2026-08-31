@@ -462,6 +462,7 @@ app.use(
         callback(new Error("Not allowed by CORS"));
       }
     },
+    origin: true,
     credentials: true,
   })
 );
