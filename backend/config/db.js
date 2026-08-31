@@ -1,18 +1,53 @@
 
+// import mongoose from "mongoose";
+
+// const connectDB = async () => {
+//   try {
+//     await mongoose.connect(process.env.MONGO_URI);
+
+//     console.log("MongoDB connected successfully");
+//   } catch (error) {
+//     console.error(
+//       "MongoDB connection failed:",
+//       error.message
+//     );
+
+//     process.exit(1);
+//   }
+// };
+
+// export default connectDB;
+
+
 import mongoose from "mongoose";
 
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
+let isConnected = false;
 
-    console.log("MongoDB connected successfully");
+const connectDB = async () => {
+  if (isConnected) {
+    return;
+  }
+
+  try {
+    const connection =
+      await mongoose.connect(
+        process.env.MONGO_URI
+      );
+
+    isConnected =
+      connection.connection.readyState === 1;
+
+    console.log(
+      "MongoDB connected"
+    );
+
   } catch (error) {
     console.error(
-      "MongoDB connection failed:",
+      "MongoDB Error:",
       error.message
     );
 
-    process.exit(1);
+    throw error;
   }
 };
 
