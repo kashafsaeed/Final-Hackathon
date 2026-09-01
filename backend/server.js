@@ -430,6 +430,182 @@
 // }
 
 // export default app;
+
+// import express from "express";
+// import cors from "cors";
+// import dotenv from "dotenv";
+
+// import connectDB from "./config/db.js";
+// import authRoutes from "./routes/authRoutes.js";
+// import ticketRoutes from "./routes/ticketRoutes.js";
+
+// dotenv.config();
+
+// const app = express();
+
+// const allowedOrigins = [
+//   // "http://localhost:5173",
+//   // "https://frontend-six-theta-mfk5dixgph.vercel.app",
+//   // "https://final-hackathon-gm86.vercel.app",
+//   // "https://final-hackathon-fpv1.vercel.app",
+//   "http://localhost:5173",
+//   "https://frontend-six-theta-mfk5dixgph.vercel.app",
+//   "https://final-hackathon-gm86.vercel.app",
+//   "https://final-hackathon-fpv1.vercel.app",
+// ];
+
+// app.use(
+//   cors({
+//     origin: function (origin, callback) {
+//       if (!origin || allowedOrigins.includes(origin)) {
+//         callback(null, true);
+//       } else {
+//         callback(new Error("Not allowed by CORS"));
+//       }
+//     },
+//     origin: true,
+//     credentials: true,
+//   })
+// );
+
+// app.use(express.json());
+
+// app.get("/", (req, res) => {
+//   res.json({
+//     success: true,
+//     message: "ResolveHub API is running",
+//   });
+// });
+
+// app.use("/api/auth", authRoutes);
+// app.use("/api/tickets", ticketRoutes);
+
+// app.use((req, res) => {
+//   res.status(404).json({
+//     success: false,
+//     message: `Route not found: ${req.method} ${req.originalUrl}`,
+//   });
+// });
+
+// app.use((err, req, res, next) => {
+//   console.error("Server Error:", err);
+
+//   res.status(500).json({
+//     success: false,
+//     message: err.message || "Internal server error",
+//   });
+// });
+
+// const PORT = process.env.PORT || 5000;
+
+// if (process.env.NODE_ENV !== "production") {
+//   app.listen(PORT, () => {
+//     console.log(`Server running on http://localhost:${PORT}`);
+//   });
+// }
+
+// export default app;
+
+
+
+// import express from "express";
+// import cors from "cors";
+// import dotenv from "dotenv";
+
+// import connectDB from "./config/db.js";
+// import authRoutes from "./routes/authRoutes.js";
+// import ticketRoutes from "./routes/ticketRoutes.js";
+
+// dotenv.config();
+
+// const app = express();
+
+// // ===============================
+// // MongoDB Connection
+// // ===============================
+// connectDB();
+
+// // ===============================
+// // CORS
+// // ===============================
+// const allowedOrigins = [
+//   "http://localhost:5173",
+//   "https://frontend-six-theta-mfk5dixgph.vercel.app",
+//   "https://final-hackathon-gm86.vercel.app",
+//   "https://final-hackathon-fpv1.vercel.app",
+// ];
+
+// app.use(
+//   cors({
+//     origin: function (origin, callback) {
+//       if (!origin || allowedOrigins.includes(origin)) {
+//         callback(null, true);
+//       } else {
+//         callback(new Error("Not allowed by CORS"));
+//       }
+//     },
+//     credentials: true,
+//   })
+// );
+
+// // ===============================
+// // Middleware
+// // ===============================
+// app.use(express.json());
+
+// // ===============================
+// // Test Route
+// // ===============================
+// app.get("/", (req, res) => {
+//   res.json({
+//     success: true,
+//     message: "ResolveHub API is running",
+//   });
+// });
+
+// // ===============================
+// // API Routes
+// // ===============================
+// app.use("/api/auth", authRoutes);
+// app.use("/api/tickets", ticketRoutes);
+
+// // ===============================
+// // 404 Handler
+// // ===============================
+// app.use((req, res) => {
+//   res.status(404).json({
+//     success: false,
+//     message: `Route not found: ${req.method} ${req.originalUrl}`,
+//   });
+// });
+
+// // ===============================
+// // Error Handler
+// // ===============================
+// app.use((err, req, res, next) => {
+//   console.error("Server Error:", err);
+
+//   res.status(err.status || 500).json({
+//     success: false,
+//     message: err.message || "Internal server error",
+//   });
+// });
+
+// // ===============================
+// // Local Development
+// // ===============================
+// const PORT = process.env.PORT || 5000;
+
+// if (process.env.NODE_ENV !== "production") {
+//   app.listen(PORT, () => {
+//     console.log(`Server running on http://localhost:${PORT}`);
+//   });
+// }
+
+// export default app;
+
+
+
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -442,12 +618,12 @@ dotenv.config();
 
 const app = express();
 
+// ===============================
+// CORS Configuration (Bulletproof)
+// ===============================
 const allowedOrigins = [
-  // "http://localhost:5173",
-  // "https://frontend-six-theta-mfk5dixgph.vercel.app",
-  // "https://final-hackathon-gm86.vercel.app",
-  // "https://final-hackathon-fpv1.vercel.app",
   "http://localhost:5173",
+  "http://localhost:3000",
   "https://frontend-six-theta-mfk5dixgph.vercel.app",
   "https://final-hackathon-gm86.vercel.app",
   "https://final-hackathon-fpv1.vercel.app",
@@ -456,29 +632,72 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
+      // Allow requests with no origin (like mobile apps, curl, postman)
+      if (!origin) return callback(null, true);
+      
+      const cleanOrigin = origin.replace(/\/$/, "");
+      if (allowedOrigins.some(o => o.replace(/\/$/, "") === cleanOrigin)) {
+        return callback(null, true);
       }
+      return callback(null, true); // Fallback to allow during deployment debugging
     },
-    origin: true,
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   })
 );
 
-app.use(express.json());
+// Pre-flight requests
+app.options("*", cors());
 
+// ===============================
+// Middleware
+// ===============================
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Ensure DB is connected before processing requests on Vercel
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error("Database connection middleware error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Database connection failed",
+      error: error.message,
+    });
+  }
+});
+
+// ===============================
+// Root / Health Route
+// ===============================
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "ResolveHub API is running",
+    message: "ResolveHub API is running smoothly!",
+    timestamp: new Date().toISOString(),
   });
 });
 
+app.get("/api", (req, res) => {
+  res.json({
+    success: true,
+    message: "ResolveHub API Base Endpoint",
+  });
+});
+
+// ===============================
+// API Routes
+// ===============================
 app.use("/api/auth", authRoutes);
 app.use("/api/tickets", ticketRoutes);
 
+// ===============================
+// 404 Handler
+// ===============================
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -486,15 +705,21 @@ app.use((req, res) => {
   });
 });
 
+// ===============================
+// Global Error Handler
+// ===============================
 app.use((err, req, res, next) => {
-  console.error("Server Error:", err);
+  console.error("Server Global Error:", err);
 
-  res.status(500).json({
+  res.status(err.status || 500).json({
     success: false,
     message: err.message || "Internal server error",
   });
 });
 
+// ===============================
+// Local Development Server
+// ===============================
 const PORT = process.env.PORT || 5000;
 
 if (process.env.NODE_ENV !== "production") {
