@@ -731,8 +731,6 @@
 // export default app;
 
 
-
-
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -746,7 +744,46 @@ dotenv.config();
 const app = express();
 
 // ===============================
-// MongoDB Cached Connection (Vercel Safe)
+// Allowed Origins
+// ===============================
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://frontend-six-theta-mfk5dixgph.vercel.app",
+  "https://final-hackathon-gm86.vercel.app",
+  "https://final-hackathon-fpv1.vercel.app",
+];
+
+// ===============================
+// CORS Middleware (FIRST)
+// ===============================
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (!origin || allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin || "*");
+  } else {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Requested-With, Accept"
+  );
+
+  // Preflight OPTIONS fast return
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  next();
+});
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ===============================
+// MongoDB Cached Connection
 // ===============================
 let cached = global.mongoose;
 if (!cached) {
@@ -759,20 +796,20 @@ async function connectDB() {
   }
 
   if (!cached.promise) {
-    const opts = {
-      bufferCommands: false,
-      serverSelectionTimeoutMS: 8000,
-    };
-
     const uri = process.env.MONGO_URI;
     if (!uri) {
-      throw new Error("MONGO_URI environment variable is missing!");
+      throw new Error("MONGO_URI is not defined in environment variables");
     }
 
-    cached.promise = mongoose.connect(uri, opts).then((mongooseInstance) => {
-      console.log("MongoDB connected successfully");
-      return mongooseInstance;
-    });
+    cached.promise = mongoose
+      .connect(uri, {
+        serverSelectionTimeoutMS: 5000,
+        bufferCommands: false,
+      })
+      .then((mongooseInstance) => {
+        console.log("MongoDB connected");
+        return mongooseInstance;
+      });
   }
 
   try {
@@ -785,50 +822,13 @@ async function connectDB() {
   return cached.conn;
 }
 
-// ===============================
-// CORS Configuration
-// ===============================
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:3000",
-  "https://frontend-six-theta-mfk5dixgph.vercel.app",
-  "https://final-hackathon-gm86.vercel.app",
-  "https://final-hackathon-fpv1.vercel.app",
-];
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
-      const cleanOrigin = origin.replace(/\/$/, "");
-      if (allowedOrigins.some((o) => o.replace(/\/$/, "") === cleanOrigin)) {
-        return callback(null, true);
-      }
-      return callback(null, true); // Permissive for deployment stability
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-  })
-);
-
-app.options("*", cors());
-
-// ===============================
-// Body Parsers
-// ===============================
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// ===============================
-// DB Middleware (Executes on every request)
-// ===============================
+// Ensure DB connected on requests
 app.use(async (req, res, next) => {
   try {
     await connectDB();
     next();
   } catch (error) {
-    console.error("Database connection failed:", error.message);
+    console.error("DB Error:", error.message);
     return res.status(500).json({
       success: false,
       message: "Database connection failed",
@@ -838,13 +838,13 @@ app.use(async (req, res, next) => {
 });
 
 // ===============================
-// Health check route
+// Test / Health Route
 // ===============================
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "ResolveHub API is running smoothly!",
-    database: mongoose.connection.readyState === 1 ? "Connected" : "Connecting...",
+    message: "ResolveHub API is running",
+    database: mongoose.connection.readyState === 1 ? "Connected" : "Disconnected",
   });
 });
 
@@ -865,19 +865,16 @@ app.use((req, res) => {
 });
 
 // ===============================
-// Global Error Handler
+// Error Handler
 // ===============================
 app.use((err, req, res, next) => {
-  console.error("Global Error Handler:", err);
+  console.error("Global Error:", err);
   res.status(err.status || 500).json({
     success: false,
     message: err.message || "Internal server error",
   });
 });
 
-// ===============================
-// Local Server (Not executed on Vercel)
-// ===============================
 if (process.env.NODE_ENV !== "production") {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
