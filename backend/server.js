@@ -606,11 +606,138 @@
 
 
 
+// import express from "express";
+// import cors from "cors";
+// import dotenv from "dotenv";
+
+// import connectDB from "./config/db.js";
+// import authRoutes from "./routes/authRoutes.js";
+// import ticketRoutes from "./routes/ticketRoutes.js";
+
+// dotenv.config();
+
+// const app = express();
+
+// // ===============================
+// // CORS Configuration (Bulletproof)
+// // ===============================
+// const allowedOrigins = [
+//   "http://localhost:5173",
+//   "http://localhost:3000",
+//   "https://frontend-six-theta-mfk5dixgph.vercel.app",
+//   "https://final-hackathon-gm86.vercel.app",
+//   "https://final-hackathon-fpv1.vercel.app",
+// ];
+
+// app.use(
+//   cors({
+//     origin: function (origin, callback) {
+//       // Allow requests with no origin (like mobile apps, curl, postman)
+//       if (!origin) return callback(null, true);
+      
+//       const cleanOrigin = origin.replace(/\/$/, "");
+//       if (allowedOrigins.some(o => o.replace(/\/$/, "") === cleanOrigin)) {
+//         return callback(null, true);
+//       }
+//       return callback(null, true); // Fallback to allow during deployment debugging
+//     },
+//     credentials: true,
+//     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+//   })
+// );
+
+// // Pre-flight requests
+// app.options("*", cors());
+
+// // ===============================
+// // Middleware
+// // ===============================
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+
+// // Ensure DB is connected before processing requests on Vercel
+// app.use(async (req, res, next) => {
+//   try {
+//     await connectDB();
+//     next();
+//   } catch (error) {
+//     console.error("Database connection middleware error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Database connection failed",
+//       error: error.message,
+//     });
+//   }
+// });
+
+// // ===============================
+// // Root / Health Route
+// // ===============================
+// app.get("/", (req, res) => {
+//   res.json({
+//     success: true,
+//     message: "ResolveHub API is running smoothly!",
+//     timestamp: new Date().toISOString(),
+//   });
+// });
+
+// app.get("/api", (req, res) => {
+//   res.json({
+//     success: true,
+//     message: "ResolveHub API Base Endpoint",
+//   });
+// });
+
+// // ===============================
+// // API Routes
+// // ===============================
+// app.use("/api/auth", authRoutes);
+// app.use("/api/tickets", ticketRoutes);
+
+// // ===============================
+// // 404 Handler
+// // ===============================
+// app.use((req, res) => {
+//   res.status(404).json({
+//     success: false,
+//     message: `Route not found: ${req.method} ${req.originalUrl}`,
+//   });
+// });
+
+// // ===============================
+// // Global Error Handler
+// // ===============================
+// app.use((err, req, res, next) => {
+//   console.error("Server Global Error:", err);
+
+//   res.status(err.status || 500).json({
+//     success: false,
+//     message: err.message || "Internal server error",
+//   });
+// });
+
+// // ===============================
+// // Local Development Server
+// // ===============================
+// const PORT = process.env.PORT || 5000;
+
+// if (process.env.NODE_ENV !== "production") {
+//   app.listen(PORT, () => {
+//     console.log(`Server running on http://localhost:${PORT}`);
+//   });
+// }
+
+// export default app;
+
+
+
+
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 
-import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import ticketRoutes from "./routes/ticketRoutes.js";
 
@@ -619,7 +746,47 @@ dotenv.config();
 const app = express();
 
 // ===============================
-// CORS Configuration (Bulletproof)
+// MongoDB Cached Connection (Vercel Safe)
+// ===============================
+let cached = global.mongoose;
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
+async function connectDB() {
+  if (cached.conn) {
+    return cached.conn;
+  }
+
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false,
+      serverSelectionTimeoutMS: 8000,
+    };
+
+    const uri = process.env.MONGO_URI;
+    if (!uri) {
+      throw new Error("MONGO_URI environment variable is missing!");
+    }
+
+    cached.promise = mongoose.connect(uri, opts).then((mongooseInstance) => {
+      console.log("MongoDB connected successfully");
+      return mongooseInstance;
+    });
+  }
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null;
+    throw e;
+  }
+
+  return cached.conn;
+}
+
+// ===============================
+// CORS Configuration
 // ===============================
 const allowedOrigins = [
   "http://localhost:5173",
@@ -632,14 +799,12 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps, curl, postman)
       if (!origin) return callback(null, true);
-      
       const cleanOrigin = origin.replace(/\/$/, "");
-      if (allowedOrigins.some(o => o.replace(/\/$/, "") === cleanOrigin)) {
+      if (allowedOrigins.some((o) => o.replace(/\/$/, "") === cleanOrigin)) {
         return callback(null, true);
       }
-      return callback(null, true); // Fallback to allow during deployment debugging
+      return callback(null, true); // Permissive for deployment stability
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -647,22 +812,23 @@ app.use(
   })
 );
 
-// Pre-flight requests
 app.options("*", cors());
 
 // ===============================
-// Middleware
+// Body Parsers
 // ===============================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Ensure DB is connected before processing requests on Vercel
+// ===============================
+// DB Middleware (Executes on every request)
+// ===============================
 app.use(async (req, res, next) => {
   try {
     await connectDB();
     next();
   } catch (error) {
-    console.error("Database connection middleware error:", error);
+    console.error("Database connection failed:", error.message);
     return res.status(500).json({
       success: false,
       message: "Database connection failed",
@@ -672,20 +838,13 @@ app.use(async (req, res, next) => {
 });
 
 // ===============================
-// Root / Health Route
+// Health check route
 // ===============================
 app.get("/", (req, res) => {
   res.json({
     success: true,
     message: "ResolveHub API is running smoothly!",
-    timestamp: new Date().toISOString(),
-  });
-});
-
-app.get("/api", (req, res) => {
-  res.json({
-    success: true,
-    message: "ResolveHub API Base Endpoint",
+    database: mongoose.connection.readyState === 1 ? "Connected" : "Connecting...",
   });
 });
 
@@ -709,8 +868,7 @@ app.use((req, res) => {
 // Global Error Handler
 // ===============================
 app.use((err, req, res, next) => {
-  console.error("Server Global Error:", err);
-
+  console.error("Global Error Handler:", err);
   res.status(err.status || 500).json({
     success: false,
     message: err.message || "Internal server error",
@@ -718,11 +876,10 @@ app.use((err, req, res, next) => {
 });
 
 // ===============================
-// Local Development Server
+// Local Server (Not executed on Vercel)
 // ===============================
-const PORT = process.env.PORT || 5000;
-
 if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
